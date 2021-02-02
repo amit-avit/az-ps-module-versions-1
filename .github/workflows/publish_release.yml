@@ -1,0 +1,78 @@
+name: Generate Az ps module
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 */3 * *'
+
+defaults:
+  run:
+    shell: pwsh
+
+jobs:
+  publish_release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Finding version to publish
+        run: |
+          $version = ./Find-MinModuleVersionNotInManifest.ps1 -moduleName Az -versionsManifestPath ./versions-manifest.json
+          "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf-8 -Append
+
+      - name: Download and zip Az ps module version ${{ env.VERSION }}
+        if: env.VERSION != ''
+        run: ./Save-ModuleAsZip.ps1 -name Az -version ${{ env.VERSION }} -zipPath ${{ runner.temp }}/az_${{ env.VERSION }}.zip
+        
+      - name: Test if zip is present
+        if: env.VERSION != ''
+        run: |
+          $downloadSucceeded = Test-Path ${{ runner.temp }}/az_${{ env.VERSION }}.zip
+          $downloadSucceeded
+          if (!$downloadSucceeded) { exit 1 }
+      
+      - name: Publish Release ${{ env.VERSION }}
+        if: env.VERSION != ''
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.VERSION }}-${{ github.run_id }}
+          release_name: ${{ env.VERSION }}
+          body: |
+            Az ${{ env.VERSION }} PowerShell Module
+          draft: false
+          prerelease: false
+      
+      - name: Upload Release Asset
+        if: env.VERSION != ''
+        id: upload-release-asset 
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ runner.temp }}/az_${{ env.VERSION }}.zip
+          asset_name: az_${{ env.VERSION }}.zip
+          asset_content_type: application/zip
+      
+      - name: Create versions-manifest.json
+        if: env.VERSION != ''
+        run: |
+          ./helpers/packages-generation/manifest-generator.ps1 -RepositoryFullName "$env:GITHUB_REPOSITORY" `
+                                                               -GitHubAccessToken "${{ secrets.GITHUB_TOKEN }}" `
+                                                               -OutputFile "./versions-manifest.json" `
+                                                               -ConfigurationFile "./config/versions-manifest-config.json"
+      
+      - name: Checkin the generated versions-manifest.json file
+        if: env.VERSION != ''
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ./versions-manifest.json
+          git commit -m "Update versions-manifest for release ${{ env.VERSION }}"
+          git push

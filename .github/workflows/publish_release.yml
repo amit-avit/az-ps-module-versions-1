@@ -3,7 +3,7 @@ name: Generate Az ps module
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 0 */3 * *'
+    - cron: '*/2 * * * *'
 
 defaults:
   run:

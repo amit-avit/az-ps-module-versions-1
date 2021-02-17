@@ -31,7 +31,6 @@ jobs:
         if: env.VERSION != ''
         run: |
           $downloadSucceeded = Test-Path ${{ runner.temp }}/az_${{ env.VERSION }}.zip
-          $downloadSucceeded
           if (!$downloadSucceeded) { exit 1 }
       
       - name: Publish Release ${{ env.VERSION }}

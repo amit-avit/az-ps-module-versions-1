@@ -20,12 +20,12 @@ jobs:
 
       - name: Finding version to publish
         run: |
-          $version = ./Find-MinModuleVersionNotInManifest.ps1 -moduleName Az -versionsManifestPath ./versions-manifest.json
+          $version = ./scripts/Find-MinModuleVersionNotInManifest.ps1 -moduleName Az -versionsManifestPath ./versions-manifest.json
           "VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf-8 -Append
 
       - name: Download and zip Az ps module version ${{ env.VERSION }}
         if: env.VERSION != ''
-        run: ./Save-ModuleAsZip.ps1 -name Az -version ${{ env.VERSION }} -zipPath ${{ runner.temp }}/az_${{ env.VERSION }}.zip
+        run: ./scripts/Save-ModuleAsZip.ps1 -name Az -version ${{ env.VERSION }} -zipPath ${{ runner.temp }}/az_${{ env.VERSION }}.zip
         
       - name: Test if zip is present
         if: env.VERSION != ''

@@ -1,5 +1,16 @@
 [
   {
+    "version": "4.7.0",
+    "stable": true,
+    "release_url": "https://github.com/AmrutaKawade/az-ps-module-versions/releases/tag/4.7.0-611919144",
+    "files": [
+      {
+        "filename": "az_4.7.0.zip",
+        "download_url": "https://github.com/AmrutaKawade/az-ps-module-versions/releases/download/4.7.0-611919144/az_4.7.0.zip"
+      }
+    ]
+  },
+  {
     "version": "4.6.1",
     "stable": true,
     "release_url": "https://github.com/AmrutaKawade/az-ps-module-versions/releases/tag/4.6.1-611876615",
